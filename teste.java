@@ -12,11 +12,11 @@ public class teste {
         arvore.inserir(90);
         arvore.inserir(100);
         arvore.remover(60);
-        System.out.println("Maior chave: " + arvore.maiorChave());
+        System.out.println("Maior chave: " + arvore.menorChave());
         System.out.println("Menor chave: " + arvore.menorChave());
         System.out.println("Altura: " + arvore.altura());
-        System.out.println("Encontrar 50: " + arvore.encontrar(50));
-        System.out.println("Encontrar 60: " + arvore.encontrar(60));
+        System.out.println("Encontrar 50: " + arvore.encontrarNo(50));
+        System.out.println("Encontrar 60: " + arvore.encontrarNo(60));
         arvore.exibirPorNivel();
         arvore.exibirPreOrdem();
     }

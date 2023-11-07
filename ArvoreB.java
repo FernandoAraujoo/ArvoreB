@@ -2,83 +2,76 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class ArvoreB {
-    private int N;
+public class ArvoreB<T extends Comparable<T>> {
+    private int grau;
     private No raiz;
 
-    public ArvoreB(int N) {
-        this.N = N;
-        this.raiz = null;
+    public ArvoreB(int grau) {
+        this.grau = grau;
+        raiz = new No();
     }
 
-    public void inserir(int valor) {
-        if (raiz == null) {
-            raiz = new No(N, true);
-            raiz.chaves[0] = valor;
-            raiz.n = 1;
+    public void inserir(T valor) {
+        if (raiz.estaCheio()) {
+            No novaRaiz = new No();
+            novaRaiz.filhos.add(raiz);
+            novaRaiz.dividirFilho(0, raiz);
+            novaRaiz.inserirNaoCheio(valor);
+            raiz = novaRaiz;
         } else {
-            if (raiz.n == 2 * N - 1) {
-                No novo = new No(N, false);
-                novo.filhos[0] = raiz;
-                novo.dividirFilho(0, raiz);
-                int i = 0;
-                if (novo.chaves[0] < valor) {
-                    i++;
-                }
-                novo.filhos[i].inserirNaoCheio(valor);
-                raiz = novo;
-            } else {
-                raiz.inserirNaoCheio(valor);
-            }
+            raiz.inserirNaoCheio(valor);
         }
     }
 
-    public void remover(int valor) {
-        if (raiz == null) {
+    public void remover(T valor) {
+        if (raiz.n == 0) {
+            System.out.println("A árvore está vazia.");
             return;
         }
-        raiz.remover(valor);
+        remover(valor);
         if (raiz.n == 0) {
-            if (raiz.ehFolha()) {
+            if (raiz.eFolha()) {
                 raiz = null;
             } else {
-                raiz = raiz.filhos[0];
+                raiz = raiz.filhos.get(0);
             }
         }
     }
 
-    public No encontrarNo(int valor) {
-        return (raiz == null) ? null : raiz.encontrarNo(valor);
-    }
-
-    public int encontrarPosicao(int valor) {
-        return (raiz == null) ? -1 : raiz.encontrarPosicao(valor);
-    }
-
-    public int maiorChave() {
+    public T encontrarMaior() {
         if (raiz == null) {
-            return -1;
+            return null;
         }
-        No atual = raiz;
-        while (!atual.ehFolha()) {
-            atual = atual.filhos[atual.n];
+        No noAtual = raiz;
+        while (!noAtual.eFolha()) {
+            noAtual = noAtual.filhos.get(noAtual.n);
         }
-        return atual.chaves[atual.n - 1];
+        return noAtual.chaves.get(noAtual.n - 1);
     }
 
-    public int menorChave() {
+    public T encontrarMenor() {
         if (raiz == null) {
-            return -1;
+            return null;
         }
-        No atual = raiz;
-        while (!atual.ehFolha()) {
-            atual = atual.filhos[0];
+        No noAtual = raiz;
+        while (!noAtual.eFolha()) {
+            noAtual = noAtual.filhos.get(0);
         }
-        return atual.chaves[0];
+        return noAtual.chaves.get(0);
     }
 
-    public int altura() {
-        return (raiz == null) ? 0 : raiz.altura();
+    public int calcularAltura() {
+        if (raiz == null) {
+            return 0;
+        }
+        return calcularAltura();
+    }
+
+    public No encontrarNo(T valor) {
+        if (raiz == null) {
+            return null;
+        }
+        return encontrarNo(valor);
     }
 
     public void exibirPorNivel() {
@@ -88,16 +81,12 @@ public class ArvoreB {
         Queue<No> fila = new LinkedList<>();
         fila.add(raiz);
         while (!fila.isEmpty()) {
-            int tamanho = fila.size();
-            for (int i = 0; i < tamanho; i++) {
-                No atual = fila.poll();
-                for (int j = 0; j < atual.n; j++) {
-                    System.out.print(atual.chaves[j] + " ");
-                }
-                if (!atual.ehFolha()) {
-                    for (int j = 0; j <= atual.n; j++) {
-                        fila.add(atual.filhos[j]);
-                    }
+            int tamanhoFila = fila.size();
+            for (int i = 0; i < tamanhoFila; i++) {
+                No noAtual = fila.poll();
+                System.out.print(noAtual + " ");
+                for (No filho : noAtual.filhos) {
+                    fila.add(filho);
                 }
             }
             System.out.println();
@@ -105,49 +94,68 @@ public class ArvoreB {
     }
 
     public void exibirPreOrdem() {
-        if (raiz != null) {
-            raiz.exibirPreOrdem();
+        if (raiz == null) {
+            return;
         }
+       exibirPreOrdem();
     }
 
     private class No {
-        private int[] chaves;
-        private No[] filhos;
-        private int n;
-        private boolean folha;
+        public int n;
+        private ArrayList<T> chaves;
+        private ArrayList<No> filhos;
 
-        public No(int N, boolean folha) {
-            this.chaves = new int[2 * N - 1];
-            this.filhos = new No[2 * N];
-            this.n = 0;
-            this.folha = folha;
+        private No() {
+            chaves = new ArrayList<>();
+            filhos = new ArrayList<>();
         }
 
-        public void inserirNaoCheio(int valor) {
-            int i = n - 1;
-            if (folha) {
-                while (i >= 0 && chaves[i] > valor) {
-                    chaves[i + 1] = chaves[i];
-                    i--;
+       
+        private boolean estaCheio() {
+            return chaves.size() == 2 * grau - 1;
+        }
+
+        private void dividirFilho(int indice, No no) {
+            No novoNo = new No();
+            novoNo.chaves.addAll(no.chaves.subList(grau, 2 * grau - 1));
+            no.chaves.subList(grau - 1, 2 * grau - 1).clear();
+            if (!no.eFolha()) {
+                novoNo.filhos.addAll(no.filhos.subList(grau, 2 * grau));
+                no.filhos.subList(grau, 2 * grau).clear();
+            }
+            chaves.add(indice, no.chaves.remove(grau - 1));
+            filhos.add(indice + 1, novoNo);
+        }
+
+        private boolean eFolha() {
+            return false;
+        }
+
+
+        private void inserirNaoCheio(T valor) {
+            int indice = chaves.size() - 1;
+            if (eFolha()) {
+                chaves.add(null);
+                while (indice >= 0 && valor.compareTo(chaves.get(indice)) < 0) {
+                    chaves.set(indice + 1, chaves.get(indice));
+                    indice--;
                 }
-                chaves[i + 1] = valor;
-                n++;
+                chaves.set(indice + 1, valor);
             } else {
-                while (i >= 0 && chaves[i] > valor) {
-                    i--;
+                while (indice >= 0 && valor.compareTo(chaves.get(indice)) < 0) {
+                    indice--;
                 }
-                if (filhos[i + 1].n == 2 * N - 1) {
-                    dividirFilho(i + 1, filhos[i + 1]);
-                    if (chaves[i + 1] < valor) {
-                        i++;
-                    }
-                }
-                filhos[i + 1].inserirNaoCheio(valor);
+                indice++;
+                if (filhos.get(indice).estaCheio());
             }
         }
-
     }
 
-}
+    public String menorChave() {
+        return null;
+    }
 
-       // public void dividirFilho(int i
+    public String altura() {
+        return null;
+    }
+}
